@@ -23,11 +23,11 @@ void Instructions::Load(uint8_t& op1) {
   op1 = mmu_->ReadByte(registers_->pc++);
 }
 
-void Instructions::Load(uint8_t& op1, uint8_t& op2) {
+void Instructions::Load(uint8_t& op1, uint8_t op2) {
   op1 = op2;
 }
 
-void Instructions::Load(RegisterU16& op1, uint8_t& op2) {
+void Instructions::Load(RegisterU16& op1, uint8_t op2) {
   mmu_->WriteByte(op1.Get(), op2);
 }
 
@@ -43,7 +43,7 @@ void Instructions::Add(RegisterU16& op1, RegisterU16& op2) {
   op1.Set(static_cast<uint16_t>(res));
 }
 
-void Instructions::Add(uint8_t& op1, uint8_t& op2) {
+void Instructions::Add(uint8_t& op1, uint8_t op2) {
   registers_->SetHalfCarryFlag(((op1 & 0xF) + (op2 & 0xF)) > 0xF);
   uint16_t res = op1 + op2;
   registers_->SetCarryFlag(res > 0xFF);
@@ -52,7 +52,7 @@ void Instructions::Add(uint8_t& op1, uint8_t& op2) {
   registers_->SetSubtractionFlag(false);
 }
 
-void Instructions::Adc(uint8_t& op1, uint8_t& op2) {
+void Instructions::Adc(uint8_t& op1, uint8_t op2) {
   registers_->SetHalfCarryFlag(((op1 & 0xF) + (op2 & 0xF) + registers_->GetCarryFlag()) > 0xF);
   uint16_t res = op1 + op2 + static_cast<uint8_t>(registers_->GetCarryFlag());
   registers_->SetCarryFlag(res > 0xFF);
@@ -61,7 +61,7 @@ void Instructions::Adc(uint8_t& op1, uint8_t& op2) {
   registers_->SetSubtractionFlag(false);
 }
 
-void Instructions::Sub(uint8_t& op1) {
+void Instructions::Sub(uint8_t op1) {
   registers_->SetSubtractionFlag(true);
   registers_->SetHalfCarryFlag((registers_->a & 0xF) < (op1 & 0xF));
   registers_->SetCarryFlag(registers_->a < op1);
@@ -69,7 +69,7 @@ void Instructions::Sub(uint8_t& op1) {
   registers_->SetZeroFlag(registers_->a, false);
 }
 
-void Instructions::Sbc(uint8_t& op1, uint8_t& op2) {
+void Instructions::Sbc(uint8_t& op1, uint8_t op2) {
   registers_->SetSubtractionFlag(true);
   registers_->SetHalfCarryFlag((op1 & 0xF) < ((op2 & 0xF) + registers_->GetCarryFlag()));
   bool old_cflag = registers_->GetCarryFlag();
@@ -89,6 +89,15 @@ void Instructions::Inc(uint8_t& op1) {
   registers_->SetSubtractionFlag(false);
 }
 
+void Instructions::Inc() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  registers_->SetHalfCarryFlag((op1 & 0xF) == 0xF);
+  ++op1;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+}
+
 void Instructions::Dec(RegisterU16& op1) {
   op1.Set(op1.Get() - 1);
 }
@@ -96,6 +105,15 @@ void Instructions::Dec(RegisterU16& op1) {
 void Instructions::Dec(uint8_t& op1) {
   registers_->SetHalfCarryFlag(!(op1 & 0xF));  // some documents are incorrect
   --op1;
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(true);
+}
+
+void Instructions::Dec() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  registers_->SetHalfCarryFlag(!(op1 & 0xF));  // some documents are incorrect
+  --op1;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
   registers_->SetZeroFlag(op1, false);
   registers_->SetSubtractionFlag(true);
 }
@@ -161,7 +179,7 @@ void Instructions::Rst(uint16_t addr) {
   registers_->pc = addr;
 }
 
-void Instructions::And(uint8_t& op1) {
+void Instructions::And(uint8_t op1) {
   registers_->a &= op1;
   registers_->SetZeroFlag(registers_->a, false);
   registers_->SetSubtractionFlag(false);
@@ -169,7 +187,7 @@ void Instructions::And(uint8_t& op1) {
   registers_->SetCarryFlag(false);
 }
 
-void Instructions::Or(uint8_t& op1) {
+void Instructions::Or(uint8_t op1) {
   registers_->a |= op1;
   registers_->SetZeroFlag(registers_->a, false);
   registers_->SetSubtractionFlag(false);
@@ -177,7 +195,7 @@ void Instructions::Or(uint8_t& op1) {
   registers_->SetCarryFlag(false);
 }
 
-void Instructions::Xor(uint8_t& op1) {
+void Instructions::Xor(uint8_t op1) {
   registers_->a ^= op1;
   registers_->SetZeroFlag(registers_->a, false);
   registers_->SetSubtractionFlag(false);
@@ -185,7 +203,7 @@ void Instructions::Xor(uint8_t& op1) {
   registers_->SetCarryFlag(false);
 }
 
-void Instructions::Cp(uint8_t& op1) {
+void Instructions::Cp(uint8_t op1) {
   registers_->SetSubtractionFlag(true);
   registers_->SetHalfCarryFlag((registers_->a & 0xF) < (op1 & 0xF));
   registers_->SetCarryFlag(registers_->a < op1);
@@ -205,9 +223,31 @@ void Instructions::Rlc(uint8_t& op1) {
   registers_->SetCarryFlag(msb);
 }
 
+void Instructions::Rlc() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  bool msb = (op1 >> 7) & 0x1;
+  op1 = (op1 << 1) | msb;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(msb);
+}
+
 void Instructions::Rrc(uint8_t& op1) {
   bool lsb = op1 & 0x1;
   op1 = (op1 >> 1) | (lsb << 7);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(lsb);
+}
+
+void Instructions::Rrc() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  bool lsb = op1 & 0x1;
+  op1 = (op1 >> 1) | (lsb << 7);
+  mmu_->WriteByte(registers_->hl.Get(), op1);
   registers_->SetZeroFlag(op1, false);
   registers_->SetSubtractionFlag(false);
   registers_->SetHalfCarryFlag(false);
@@ -223,6 +263,17 @@ void Instructions::Rl(uint8_t& op1) {
   registers_->SetCarryFlag(msb);
 }
 
+void Instructions::Rl() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  bool msb = (op1 >> 7) & 0x1;
+  op1 = (op1 << 1) | registers_->GetCarryFlag();
+  mmu_->WriteByte(registers_->hl.Get(), op1);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(msb);
+}
+
 void Instructions::Rr(uint8_t& op1) {
   bool lsb = op1 & 0x1;
   op1 = (op1 >> 1) | (registers_->GetCarryFlag() << 7);
@@ -232,9 +283,31 @@ void Instructions::Rr(uint8_t& op1) {
   registers_->SetCarryFlag(lsb);
 }
 
+void Instructions::Rr() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  bool lsb = op1 & 0x1;
+  op1 = (op1 >> 1) | (registers_->GetCarryFlag() << 7);
+  mmu_->WriteByte(registers_->hl.Get(), op1);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(lsb);
+}
+
 void Instructions::Sla(uint8_t& op1) {
   bool msb = (op1 >> 7) & 0x1;
   op1 = (op1 << 1) & 0b11111110;
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(msb);
+}
+
+void Instructions::Sla() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  bool msb = (op1 >> 7) & 0x1;
+  op1 = (op1 << 1) & 0b11111110;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
   registers_->SetZeroFlag(op1, false);
   registers_->SetSubtractionFlag(false);
   registers_->SetHalfCarryFlag(false);
@@ -251,10 +324,34 @@ void Instructions::Sra(uint8_t& op1) {
   registers_->SetCarryFlag(lsb);
 }
 
+void Instructions::Sra() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  uint8_t msb_u8 = op1 & 0b10000000;
+  bool lsb = op1 & 0x1;
+  op1 = (op1 >> 1) | msb_u8;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(lsb);
+}
+
 void Instructions::Swap(uint8_t& op1) {
   uint8_t lower_nibble = op1 & 0x0F;
   uint8_t higher_nibble = (op1 >> 4) & 0x0F;
   op1 = (lower_nibble << 4) | higher_nibble;
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(false);
+}
+
+void Instructions::Swap() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  uint8_t lower_nibble = op1 & 0x0F;
+  uint8_t higher_nibble = (op1 >> 4) & 0x0F;
+  op1 = (lower_nibble << 4) | higher_nibble;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
   registers_->SetZeroFlag(op1, false);
   registers_->SetSubtractionFlag(false);
   registers_->SetHalfCarryFlag(false);
@@ -270,7 +367,18 @@ void Instructions::Srl(uint8_t& op1) {
   registers_->SetCarryFlag(lsb);
 }
 
-void Instructions::Bit(int op1, uint8_t& op2) {
+void Instructions::Srl() {
+  uint8_t op1 = mmu_->ReadByte(registers_->hl.Get());
+  bool lsb = op1 & 0x1;
+  op1 = (op1 >> 1) & 0b01111111;
+  mmu_->WriteByte(registers_->hl.Get(), op1);
+  registers_->SetZeroFlag(op1, false);
+  registers_->SetSubtractionFlag(false);
+  registers_->SetHalfCarryFlag(false);
+  registers_->SetCarryFlag(lsb);
+}
+
+void Instructions::Bit(int op1, uint8_t op2) {
   registers_->SetZeroFlag((op2 >> op1) & 0x1, false);  // set if bit op1 of register op2 is 0
   registers_->SetSubtractionFlag(false);
   registers_->SetHalfCarryFlag(true);
@@ -280,6 +388,16 @@ void Instructions::Res(int op1, uint8_t& op2) {
   op2 &= ((1 << op1) ^ 0xFF);
 }
 
+void Instructions::Res(int op1) {
+  uint8_t op2 = mmu_->ReadByte(registers_->hl.Get());
+  mmu_->WriteByte(registers_->hl.Get(), op2 & ((1 << op1) ^ 0xFF));
+}
+
 void Instructions::Set(int op1, uint8_t& op2) {
   op2 |= (1 << op1);
+}
+
+void Instructions::Set(int op1) {
+  uint8_t op2 = mmu_->ReadByte(registers_->hl.Get());
+  mmu_->WriteByte(registers_->hl.Get(), op2 | (1 << op1));
 }

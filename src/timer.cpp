@@ -10,7 +10,7 @@ Timer::Timer(std::shared_ptr<CPU> cpu, std::shared_ptr<MMU> mmu, std::shared_ptr
   mmu_->WriteByte(0xFF07, 0xF8); // TAC
 }
 
-void Timer::TickTimer() {
+void Timer::Tick() {
   int total_cycles = cpu_->tcycles;
   IncrementDIV(total_cycles);
   TickTIMA(total_cycles);

@@ -56,7 +56,7 @@ class CPU {
   void InterpretInstruction(const uint8_t opcode);
   void InterpretInstructionEx(const uint8_t opcode);  // for CB prefixed instructions
   void DebugInstruction(const uint8_t opcode);
-  void TickCPU();
+  void Tick();
 
   int tcycles;  // CPU clock cycle count, which is reset every CPU run-loop
 

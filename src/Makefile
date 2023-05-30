@@ -1,6 +1,6 @@
 CC = g++
 TARGET = emu
-OBJS = emu.o cpu.o mmu.o interrupt.o instructions.o timer.o registers.o
+OBJS = emu.o cpu.o mmu.o interrupt.o instructions.o timer.o registers.o cartridge.o
 
 CXXFLAGS = -O3 -Wall
 

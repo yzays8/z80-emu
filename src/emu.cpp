@@ -7,6 +7,7 @@
 #include "instructions.hpp"
 #include "interrupt.hpp"
 #include "timer.hpp"
+#include "cartridge.hpp"
 
 void CheckSerialPort(std::shared_ptr<MMU> mmu) {
   if (mmu->ReadByte(0xFF02) == 0x81) {
@@ -23,17 +24,18 @@ int main(int argc, char* argv[]) {
   }
 
   auto registers = std::make_shared<Registers>();
-  auto mmu = std::make_shared<MMU>();
+  auto cartridge = std::make_shared<Cartridge>(argv[1]);
+  auto mmu = std::make_shared<MMU>(cartridge);
   auto interrupt = std::make_shared<Interrupt>(mmu);
   auto instructions = std::make_shared<Instructions>(registers, mmu);
   auto cpu = std::make_shared<CPU>(registers, instructions, mmu, interrupt);
   auto timer = std::make_shared<Timer>(cpu, mmu, interrupt);
 
-  mmu->LoadFile(0x0000, argv[1]);
+  mmu->LoadROMBank0();
 
   for (;;) {
-    cpu->TickCPU();
-    timer->TickTimer();
+    cpu->Tick();
+    timer->Tick();
     CheckSerialPort(mmu);
   }
 }

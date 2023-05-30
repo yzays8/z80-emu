@@ -2,16 +2,21 @@
 
 #include <array>
 #include <string>
+#include <memory>
+
+#include "cartridge.hpp"
 
 class MMU {
  public:
-  MMU();
-  void LoadFile(uint16_t base_addr, std::string path);
-  uint8_t& ReadByte(uint16_t addr);
-  uint16_t ReadShort(uint16_t addr) const;	// read 16bits
+  MMU(std::shared_ptr<Cartridge> cartridge);
+  void LoadROMBank0();
+  uint8_t ReadByte(const uint16_t addr) const;
+  uint16_t ReadShort(const uint16_t addr) const;  // read 16bits
   void WriteByte(uint16_t addr, uint8_t data);
-  void WriteShort(uint16_t addr, uint16_t data);	// write 16bits
+  void WriteShort(uint16_t addr, uint16_t data);  // write 16bits
 
  private:
   std::array<uint8_t, 0x10000> memory_map_;
+
+  std::shared_ptr<Cartridge> cartridge_;
 };

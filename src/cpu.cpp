@@ -6,12 +6,15 @@
 #include "registers.hpp"
 
 CPU::CPU(std::shared_ptr<Registers> registers, std::shared_ptr<Instructions> instructions,
-std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
-    : registers_{registers}, instructions_{instructions}, mmu_{mmu}, interrupt_{interrupt},
+          std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
+    : registers_{registers},
+      instructions_{instructions},
+      mmu_{mmu},
+      interrupt_{interrupt},
       halt_{false} {
 }
 
-void CPU::TickCPU() {
+void CPU::Tick() {
   tcycles = 0;
   if (!halt_) {
     uint8_t opcode = mmu_->ReadByte(registers_->pc);
@@ -117,8 +120,6 @@ void CPU::InterpretInstruction(const uint8_t opcode) {
       }
       break;
     case 0x10:  // STOP 0
-      printf("STOP is not implemented: 0x%02X\n", opcode);
-      std::exit(EXIT_FAILURE);
       break;
     case 0x11:  // LD DE, d16
       instructions_->Load(registers_->de);
@@ -263,10 +264,10 @@ void CPU::InterpretInstruction(const uint8_t opcode) {
       ++registers_->sp;
       break;
     case 0x34:  // INC (HL)
-      instructions_->Inc(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Inc();
       break;
     case 0x35:  // DEC (HL)
-      instructions_->Dec(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Dec();
       break;
     case 0x36:  // LD (HL), d8
       mmu_->WriteByte(registers_->hl.Get(), mmu_->ReadByte(registers_->pc));
@@ -882,10 +883,8 @@ void CPU::InterpretInstruction(const uint8_t opcode) {
       instructions_->Rst(0x38);
       break;
     default:
-      printf("not implement: 0x%02X\n", opcode);
+      printf("Not implemented instruction: 0x%02X\n", opcode);
       std::exit(EXIT_FAILURE);
-      break;
-
   }
 }
 
@@ -912,7 +911,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Rlc(registers_->l);
       break;
     case 0x06:  // RLC (HL)
-      instructions_->Rlc(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Rlc();
       break;
     case 0x07:  // RLC A
       instructions_->Rlc(registers_->a);
@@ -936,7 +935,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Rrc(registers_->l);
       break;
     case 0x0E:  // RRC (HL)
-      instructions_->Rrc(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Rrc();
       break;
     case 0x0F:  // RRC A
       instructions_->Rrc(registers_->a);
@@ -960,7 +959,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Rl(registers_->l);
       break;
     case 0x16:  // RL (HL)
-      instructions_->Rl(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Rl();
       break;
     case 0x17:  // RL A
       instructions_->Rl(registers_->a);
@@ -984,7 +983,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Rr(registers_->l);
       break;
     case 0x1E:  // RR (HL)
-      instructions_->Rr(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Rr();
       break;
     case 0x1F:  // RR A
       instructions_->Rr(registers_->a);
@@ -1008,7 +1007,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Sla(registers_->l);
       break;
     case 0x26:  // SLA (HL)
-      instructions_->Sla(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Sla();
       break;
     case 0x27:  // SLA A
       instructions_->Sla(registers_->a);
@@ -1032,7 +1031,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Sra(registers_->l);
       break;
     case 0x2E:  // SRA (HL)
-      instructions_->Sra(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Sra();
       break;
     case 0x2F:  // SRA A
       instructions_->Sra(registers_->a);
@@ -1056,7 +1055,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Swap(registers_->l);
       break;
     case 0x36:  // SWAP (HL)
-      instructions_->Swap(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Swap();
       break;
     case 0x37:  // SWAP A
       instructions_->Swap(registers_->a);
@@ -1080,7 +1079,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Srl(registers_->l);
       break;
     case 0x3E:  // SRL (HL)
-      instructions_->Srl(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Srl();
       break;
     case 0x3F:  // SRL A
       instructions_->Srl(registers_->a);
@@ -1296,7 +1295,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(0, registers_->l);
       break;
     case 0x86:  // RES 0, (HL)
-      instructions_->Res(0, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Res(0);
       break;
     case 0x87:  // RES 0, A
       instructions_->Res(0, registers_->a);
@@ -1320,7 +1319,10 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(1, registers_->l);
       break;
     case 0x8E:  // RES 1, (HL)
-      instructions_->Res(1, mmu_->ReadByte(registers_->hl.Get()));
+      {
+        uint8_t op2 = mmu_->ReadByte(registers_->hl.Get());
+        mmu_->WriteByte(registers_->hl.Get(), op2 & ((1 << 1) ^ 0xFF));
+      }
       break;
     case 0x8F:  // RES 1, A
       instructions_->Res(1, registers_->a);
@@ -1344,7 +1346,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(2, registers_->l);
       break;
     case 0x96:  // RES 2, (HL)
-      instructions_->Res(2, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Res(2);
       break;
     case 0x97:  // RES 2, A
       instructions_->Res(2, registers_->a);
@@ -1368,7 +1370,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(3, registers_->l);
       break;
     case 0x9E:  // RES 3, (HL)
-      instructions_->Res(3, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_ ->Res(3);
       break;
     case 0x9F:  // RES 3, A
       instructions_->Res(3, registers_->a);
@@ -1392,7 +1394,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(4, registers_->l);
       break;
     case 0xA6:  // RES 4, (HL)
-      instructions_->Res(4, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Res(4);
       break;
     case 0xA7:  // RES 4, A
       instructions_->Res(4, registers_->a);
@@ -1416,7 +1418,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(5, registers_->l);
       break;
     case 0xAE:  // RES 5, (HL)
-      instructions_->Res(5, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Res(5);
       break;
     case 0xAF:  // RES 5, A
       instructions_->Res(5, registers_->a);
@@ -1440,7 +1442,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(6, registers_->l);
       break;
     case 0xB6:  // RES 6, (HL)
-      instructions_->Res(6, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Res(6);
       break;
     case 0xB7:  // RES 6, A
       instructions_->Res(6, registers_->a);
@@ -1464,7 +1466,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Res(7, registers_->l);
       break;
     case 0xBE:  // RES 7, (HL)
-      instructions_->Res(7, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Res(7);
       break;
     case 0xBF:  // RES 7, A
       instructions_->Res(7, registers_->a);
@@ -1488,7 +1490,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(0, registers_->l);
       break;
     case 0xC6:  // SET 0, (HL)
-      instructions_->Set(0, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(0);
       break;
     case 0xC7:  // SET 0, A
       instructions_->Set(0, registers_->a);
@@ -1512,7 +1514,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(1, registers_->l);
       break;
     case 0xCE:  // SET 1, (HL)
-      instructions_->Set(1, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(1);
       break;
     case 0xCF:  // SET 1, A
       instructions_->Set(1, registers_->a);
@@ -1536,7 +1538,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(2, registers_->l);
       break;
     case 0xD6:  // SET 2, (HL)
-      instructions_->Set(2, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(2);
       break;
     case 0xD7:  // SET 2, A
       instructions_->Set(2, registers_->a);
@@ -1560,7 +1562,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(3, registers_->l);
       break;
     case 0xDE:  // SET 3, (HL)
-      instructions_->Set(3, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(3);
       break;
     case 0xDF:  // SET 3, A
       instructions_->Set(3, registers_->a);
@@ -1584,7 +1586,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(4, registers_->l);
       break;
     case 0xE6:  // SET 4, (HL)
-      instructions_->Set(4, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(4);
       break;
     case 0xE7:  // SET 4, A
       instructions_->Set(4, registers_->a);
@@ -1608,7 +1610,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(5, registers_->l);
       break;
     case 0xEE:  // SET 5, (HL)
-      instructions_->Set(5, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(5);
       break;
     case 0xEF:  // SET 5, A
       instructions_->Set(5, registers_->a);
@@ -1632,7 +1634,7 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(6, registers_->l);
       break;
     case 0xF6:  // SET 6, (HL)
-      instructions_->Set(6, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(6);
       break;
     case 0xF7:  // SET 6, A
       instructions_->Set(6, registers_->a);
@@ -1656,15 +1658,13 @@ void CPU::InterpretInstructionEx(const uint8_t opcode) {
       instructions_->Set(7, registers_->l);
       break;
     case 0xFE:  // SET 7, (HL)
-      instructions_->Set(7, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Set(7);
       break;
     case 0xFF:  // SET 7, A
       instructions_->Set(7, registers_->a);
       break;
     default:
-      printf("Not implemented CB-Prefixed instruction: %02X\n", opcode);
+      printf("Not implemented CB-Prefixed instruction: 0x%02X\n", opcode);
       std::exit(EXIT_FAILURE);
-      break;
   }
 }
-
