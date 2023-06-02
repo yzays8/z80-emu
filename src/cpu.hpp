@@ -54,7 +54,7 @@ class CPU {
       std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt);
 
   void InterpretInstruction(const uint8_t opcode);
-  void InterpretInstructionEx(const uint8_t opcode);  // for CB prefixed instructions
+  void InterpretInstructionCBPre(const uint8_t opcode);
   void DebugInstruction(const uint8_t opcode);
   void Tick();
 

@@ -12,10 +12,10 @@ void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {
     memory_map_[i] = cartridge_->ReadByteFromROM(i);
   }
-  std::cout << "Loaded first 16KiB of ROM into memory" << std::endl;
+  std::cout << "Loaded first 16KiB of ROM (ROM bank 0) into memory" << std::endl;
 }
 
-uint8_t MMU::ReadByte(const uint16_t addr) const {
+uint8_t MMU::ReadByte(uint16_t addr) const {
   // read from switchable 16KiB ROM bank
   if (addr >= 0x4000 && addr < 0x8000) {
     return cartridge_->ReadByteFromROM(addr - 0x4000 + 0x4000 * cartridge_->GetCurrentROMBank());
@@ -33,7 +33,7 @@ uint8_t MMU::ReadByte(const uint16_t addr) const {
   return memory_map_[addr];
 }
 
-uint16_t MMU::ReadShort(const uint16_t addr) const {
+uint16_t MMU::ReadShort(uint16_t addr) const {
   // the value of higher address is higher bits
   return ReadByte(addr) | (ReadByte(addr + 1) << 8);
 }

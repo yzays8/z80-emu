@@ -2,7 +2,7 @@ CC = g++
 TARGET = emu
 OBJS = emu.o cpu.o mmu.o interrupt.o instructions.o timer.o registers.o cartridge.o
 
-CXXFLAGS = -O3 -Wall
+CXXFLAGS = -O3 -Wall -Wextra -std=c++2b
 
 .PHONY: all
 all: $(TARGET)

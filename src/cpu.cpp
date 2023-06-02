@@ -49,8 +49,8 @@ void CPU::Tick() {
 
 void CPU::DebugInstruction(const uint8_t opcode) {
   printf("PC: 0x%04X, Opcode: 0x%02X, AF: 0x%04X, BC: 0x%04X, DE: 0x%04X, HL: 0x%04X, SP: 0x%04X\n",
-  registers_->pc-1, opcode, registers_->af.Get(), registers_->bc.Get(), registers_->de.Get(),
-  registers_->hl.Get(), registers_->sp);
+    registers_->pc-1, opcode, registers_->af.Get(), registers_->bc.Get(), registers_->de.Get(),
+    registers_->hl.Get(), registers_->sp);
 }
 
 void CPU::InterpretInstruction(const uint8_t opcode) {
@@ -729,7 +729,7 @@ void CPU::InterpretInstruction(const uint8_t opcode) {
       instructions_->Jp(registers_->GetZeroFlag());
       break;
     case 0xCB:  // PREFIX CB
-      InterpretInstructionEx(mmu_->ReadByte(registers_->pc++));
+      InterpretInstructionCBPre(mmu_->ReadByte(registers_->pc++));
       break;
     case 0xCC:  // CALL Z, a16
       instructions_->Call(registers_->GetZeroFlag());
@@ -888,7 +888,7 @@ void CPU::InterpretInstruction(const uint8_t opcode) {
   }
 }
 
-void CPU::InterpretInstructionEx(const uint8_t opcode) {
+void CPU::InterpretInstructionCBPre(const uint8_t opcode) {
   // DebugInstruction(opcode);
 
   switch (opcode) {

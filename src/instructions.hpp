@@ -9,7 +9,8 @@ class Instructions {
  public:
   Instructions(std::shared_ptr<Registers> registers, std::shared_ptr<MMU> mmu);
 
-  int GetBranchCycle(); // return the number of additional cycles in an instruction with a branch
+  // returns the number of additional cycles in an instruction with a branch
+  int GetBranchCycle();
 
   void Load(RegisterU16& op1);
   void Load(uint8_t& op1);
@@ -62,7 +63,7 @@ class Instructions {
   void Srl(uint8_t& op1);   // shift right logical
   void Srl();
 
-  void Bit(int op1, uint8_t op2);  // test bit op1 of op2
+  void Bit(int op1, uint8_t op2);   // test bit op1 of op2
   void Res(int op1, uint8_t& op2);  // reset bit op1 of op2
   void Res(int op1);
   void Set(int op1, uint8_t& op2);  // set bit op1 of op2

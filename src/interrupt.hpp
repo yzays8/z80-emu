@@ -21,7 +21,7 @@ class Interrupt {
 
   void SetIME(bool ime);
   void SetIE(InterruptType type);
-  void SetIF(InterruptType type); // request interrupt
+  void SetIF(InterruptType type); // requests interrupt
   void ResetIF(int type);
   bool GetIME();
   uint8_t GetIE();
