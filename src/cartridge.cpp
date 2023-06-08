@@ -49,8 +49,8 @@ void Cartridge::LoadROM(std::string path) {
   }
 
   // load header
-  uint8_t tmp[80];
-  for (int i = 0; i < 80; ++i) {
+  uint8_t tmp[0x50];
+  for (int i = 0; i < 0x50; ++i) {
     ifs.get(data);
     tmp[i] = static_cast<uint8_t>(data);
     rom_.push_back(static_cast<uint8_t>(data));

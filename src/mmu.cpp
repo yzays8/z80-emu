@@ -10,7 +10,7 @@ MMU::MMU(std::shared_ptr<Cartridge> cartridge) : memory_map_{0}, cartridge_{cart
 
 void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {
-    memory_map_[i] = cartridge_->ReadByteFromROM(i);
+    cartridge_rom_bank_0_[i] = cartridge_->ReadByteFromROM(i);
   }
   std::cout << "Loaded first 16KiB of ROM (ROM bank 0) into memory" << std::endl;
 }

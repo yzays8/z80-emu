@@ -52,10 +52,9 @@ class CPU {
  public:
   CPU(std::shared_ptr<Registers> registers, std::shared_ptr<Instructions> instructions,
       std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt);
-
-  void InterpretInstruction(const uint8_t opcode);
-  void InterpretInstructionCBPre(const uint8_t opcode);
-  void DebugInstruction(const uint8_t opcode);
+  void InterpretInstruction(uint8_t opcode);
+  void InterpretInstructionCB(uint8_t opcode);
+  void DebugInstruction(uint8_t opcode);
   void Tick();
 
   int tcycles;  // CPU clock cycle count, which is reset every CPU run-loop

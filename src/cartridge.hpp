@@ -25,7 +25,7 @@ struct CartridgeHeader {
       uint8_t title_new[11];
       uint8_t manufacturer_code[4];
       uint8_t cgb_flag;
-    };
+    } __attribute__((packed));
   };
   uint8_t new_licensee_code[2];
   uint8_t sgb_flag;
@@ -37,7 +37,7 @@ struct CartridgeHeader {
   uint8_t mask_rom_version_number;
   uint8_t header_checksum;
   uint8_t global_checksum[2];
-};
+} __attribute__((packed));
 
 class Cartridge {
  public:
