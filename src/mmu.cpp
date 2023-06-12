@@ -5,8 +5,7 @@
 #include "mmu.hpp"
 #include "cartridge.hpp"
 
-MMU::MMU(std::shared_ptr<Cartridge> cartridge) : memory_map_{0}, cartridge_{cartridge} {
-}
+MMU::MMU(std::shared_ptr<Cartridge> cartridge) : memory_map_{}, cartridge_{cartridge} {}
 
 void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {

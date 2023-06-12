@@ -8,7 +8,7 @@
 
 Cartridge::Cartridge(std::string path)
   : rom_{},
-    ram_{0},
+    ram_{},
     header_{},
     banking_mode_{ROM_MODE} {
   LoadROM(path);
