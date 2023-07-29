@@ -1,11 +1,14 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 #include "mmu.hpp"
 #include "cartridge.hpp"
 
-MMU::MMU(std::shared_ptr<Cartridge> cartridge) : memory_map_{}, cartridge_{cartridge} {}
+MMU::MMU(const std::string path)
+    : memory_map_{},
+      cartridge_{std::make_unique<Cartridge>(path)} {}
 
 void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {

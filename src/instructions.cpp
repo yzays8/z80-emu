@@ -5,8 +5,7 @@
 #include "mmu.hpp"
 
 Instructions::Instructions(std::shared_ptr<Registers> registers, std::shared_ptr<MMU> mmu)
-    : registers_{registers}, mmu_{mmu}, branch_cycles_{0} {
-}
+    : registers_{registers}, mmu_{mmu}, branch_cycles_{0} {}
 
 int Instructions::GetBranchCycle() {
   int ret = branch_cycles_;

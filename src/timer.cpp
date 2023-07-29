@@ -1,9 +1,16 @@
 #include <memory>
 
 #include "timer.hpp"
+#include "cpu.hpp"
+#include "mmu.hpp"
+#include "interrupt.hpp"
 
 Timer::Timer(std::shared_ptr<CPU> cpu, std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
-    : cpu_{cpu}, mmu_{mmu}, interrupt_{interrupt}, div_counter_{0}, tima_counter_{0} {
+    : cpu_{cpu},
+      mmu_{mmu},
+      interrupt_{interrupt},
+      div_counter_{0},
+      tima_counter_{0} {
   mmu_->WriteByte(0xFF04, 0xAB); // DIV
   mmu_->WriteByte(0xFF05, 0x00); // TIMA
   mmu_->WriteByte(0xFF06, 0x00); // TMA

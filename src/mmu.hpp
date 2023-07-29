@@ -8,7 +8,7 @@
 
 class MMU {
  public:
-  MMU(std::shared_ptr<Cartridge> cartridge);
+  MMU(const std::string path);
   void LoadROMBank0();
   uint8_t ReadByte(uint16_t addr) const;
   uint16_t ReadShort(uint16_t addr) const;        // read 16bits

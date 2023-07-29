@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "cpu.hpp"
+#include "mmu.hpp"
 #include "interrupt.hpp"
 
 class Timer {
@@ -18,5 +19,6 @@ class Timer {
   std::shared_ptr<MMU> mmu_;
   std::shared_ptr<Interrupt> interrupt_;
 
-  int div_counter_, tima_counter_;
+  int div_counter_;
+  int tima_counter_;
 };

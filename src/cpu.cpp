@@ -1,16 +1,16 @@
 #include <iostream>
 
+#include "mmu.hpp"
 #include "cpu.hpp"
-#include "interrupt.hpp"
-#include "instructions.hpp"
 #include "registers.hpp"
+#include "instructions.hpp"
+#include "interrupt.hpp"
 
-CPU::CPU(std::shared_ptr<Registers> registers, std::shared_ptr<Instructions> instructions,
-          std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
-    : registers_{registers},
-      instructions_{instructions},
+CPU::CPU(std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
+    : registers_{std::make_shared<Registers>()},
       mmu_{mmu},
       interrupt_{interrupt},
+      instructions_{std::make_shared<Instructions>(registers_, mmu_)},
       halt_{false} {
 }
 

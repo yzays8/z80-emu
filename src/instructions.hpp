@@ -72,5 +72,6 @@ class Instructions {
  private:
   std::shared_ptr<Registers> registers_;
   std::shared_ptr<MMU> mmu_;
+
   int branch_cycles_;
 };
