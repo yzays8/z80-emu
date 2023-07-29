@@ -6,7 +6,7 @@
 #include "mmu.hpp"
 #include "cartridge.hpp"
 
-MMU::MMU(const std::string path)
+MMU::MMU(const std::string& path)
     : memory_map_{},
       cartridge_{std::make_unique<Cartridge>(path)} {}
 

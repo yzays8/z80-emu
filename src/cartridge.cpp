@@ -8,7 +8,7 @@
 
 #include "cartridge.hpp"
 
-Cartridge::Cartridge(std::string path)
+Cartridge::Cartridge(const std::string& path)
   : rom_{},
     ram_{},
     header_{},
@@ -33,14 +33,14 @@ Cartridge::Cartridge(std::string path)
   current_ram_bank_ = 0;
 }
 
-void Cartridge::LoadROM(std::string path) {
-  if (std::filesystem::is_directory(path)) {
-    std::cerr << path << " is a directory" << std::endl;
+void Cartridge::LoadROM(const std::string& path) {
+  if (!std::filesystem::is_regular_file(path)) {
+    std::cerr << path << " is not a regular file" << std::endl;
     std::exit(EXIT_FAILURE);
   }
   std::ifstream ifs(path, std::ios::binary | std::ios::in);
   if (!ifs.is_open()) {
-    std::cerr << "Failed to open file" << std::endl;
+    std::cerr << "Failed to open file: " << path << std::endl;
     std::exit(EXIT_FAILURE);
   }
 

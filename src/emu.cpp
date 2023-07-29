@@ -9,7 +9,7 @@
 #include "cpu.hpp"
 #include "timer.hpp"
 
-Emulator::Emulator(const std::string file_path)
+Emulator::Emulator(const std::string& file_path)
     : mmu_{std::make_shared<MMU>(file_path)},
       serial_{std::make_shared<Serial>(mmu_)},
       interrupt_{std::make_shared<Interrupt>(mmu_)},

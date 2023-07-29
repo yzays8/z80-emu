@@ -11,7 +11,7 @@
 
 class Emulator {
  public:
-  Emulator(const std::string file_path);
+  Emulator(const std::string& file_path);
   void Run();
 
  private:
