@@ -19,10 +19,10 @@ class Registers {
  public:
   Registers();
 
-  void SetZeroFlag(int res, bool reset);  // z
-  void SetSubtractionFlag(bool flag);     // n
-  void SetHalfCarryFlag(bool flag);       // h
-  void SetCarryFlag(bool flag);           // c
+  void SetZeroFlag(int res, bool reset = false);  // z
+  void SetSubtractionFlag(bool flag);             // n
+  void SetHalfCarryFlag(bool flag);               // h
+  void SetCarryFlag(bool flag);                   // c
 
   bool GetZeroFlag();
   bool GetSubtractionFrag();  // for DAA instruction

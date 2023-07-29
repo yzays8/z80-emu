@@ -219,7 +219,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
           registers_->a -= 0x6;
         }
       }
-      registers_->SetZeroFlag(registers_->a, false);
+      registers_->SetZeroFlag(registers_->a);
       registers_->SetHalfCarryFlag(false);
       break;
     case 0x28:  // JR Z, r8
@@ -824,7 +824,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
     case 0xEE:  // XOR d8
       registers_->a ^= mmu_->ReadByte(registers_->pc);
       ++registers_->pc;
-      registers_->SetZeroFlag(registers_->a, false);
+      registers_->SetZeroFlag(registers_->a);
       registers_->SetSubtractionFlag(false);
       registers_->SetHalfCarryFlag(false);
       registers_->SetCarryFlag(false);
