@@ -5,15 +5,23 @@ Registers::Registers()
       af{a, f}, bc{b, c}, de{d, e}, hl{h, l}, pc{0x0100}, sp{0xFFFE} {
 }
 
-void Registers::SetZeroFlag(int res, bool reset) {  // z
-  if (reset || (res != 0)) {
+void Registers::SetZeroFlag(int res) {
+  if (res == 0) {
+    f |= 0b10000000; // z = 1
+  } else {
+    f &= 0b01111111; // z = 0
+  }
+}
+
+void Registers::SetZeroFlag(bool reset) {
+  if (reset) {
     f &= 0b01111111; // z = 0
   } else {
     f |= 0b10000000; // z = 1
   }
 }
 
-void Registers::SetSubtractionFlag(bool flag) { // n
+void Registers::SetSubtractionFlag(bool flag) {
   if (flag) {
     f |= 0b01000000; // n = 1
   } else {
@@ -21,7 +29,7 @@ void Registers::SetSubtractionFlag(bool flag) { // n
   }
 }
 
-void Registers::SetHalfCarryFlag(bool flag) { // h
+void Registers::SetHalfCarryFlag(bool flag) {
   if (flag) {
     f |= 0b00100000; // h = 1
   } else {
@@ -29,7 +37,7 @@ void Registers::SetHalfCarryFlag(bool flag) { // h
   }
 }
 
-void Registers::SetCarryFlag(bool flag) { // c
+void Registers::SetCarryFlag(bool flag) {
   if (flag) {
     f |= 0b00010000; // c = 1
   } else {

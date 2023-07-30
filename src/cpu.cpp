@@ -81,7 +81,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       {
         bool msb = (registers_->a >> 7) & 0x1;
         registers_->a = (registers_->a << 1) | msb;
-        registers_->SetZeroFlag(0, true);
+        registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         registers_->SetHalfCarryFlag(false);
         registers_->SetCarryFlag(msb);
@@ -113,7 +113,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       {
         bool lsb = registers_->a & 0x1;
         registers_->a = (registers_->a >> 1) | (lsb << 7);
-        registers_->SetZeroFlag(0, true);
+        registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         registers_->SetHalfCarryFlag(false);
         registers_->SetCarryFlag(lsb);
@@ -143,7 +143,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       {
         bool msb = (registers_->a & 0x80) >> 7;
         registers_->a = (registers_->a << 1) | registers_->GetCarryFlag();
-        registers_->SetZeroFlag(0, true);
+        registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         registers_->SetHalfCarryFlag(false);
         registers_->SetCarryFlag(msb);
@@ -174,7 +174,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       {
         bool lsb = registers_->a & 0x1;
         registers_->a = (registers_->a >> 1) | (registers_->GetCarryFlag() << 7);
-        registers_->SetZeroFlag(0, true);
+        registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         registers_->SetHalfCarryFlag(false);
         registers_->SetCarryFlag(lsb);
@@ -805,7 +805,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       break;
     case 0xE8:  // ADD SP, r8
       {
-        registers_->SetZeroFlag(0, true);
+        registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         int8_t r8 = static_cast<int8_t>(mmu_->ReadByte(registers_->pc));
         ++registers_->pc;
@@ -857,7 +857,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       break;
     case 0xF8:  // LD HL, SP+r8
       {
-        registers_->SetZeroFlag(0, true);
+        registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         int8_t r8 = static_cast<int8_t>(mmu_->ReadByte(registers_->pc));
         ++registers_->pc;
