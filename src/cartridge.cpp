@@ -9,10 +9,10 @@
 #include "cartridge.hpp"
 
 Cartridge::Cartridge(const std::string& path)
-  : rom_{},
-    ram_{},
-    header_{},
-    banking_mode_{ROM_MODE} {
+    : rom_{},
+      ram_{},
+      header_{},
+      banking_mode_{ROM_MODE} {
   LoadROM(path);
   // VerifyHeaderChecksum();
   PrintHeader();

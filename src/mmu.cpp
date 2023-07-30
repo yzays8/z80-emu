@@ -14,7 +14,6 @@ void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {
     cartridge_rom_bank_0_[i] = cartridge_->ReadByteFromROM(i);
   }
-  std::cout << "Loaded first 16KiB of ROM (ROM bank 0) into memory" << std::endl;
 }
 
 uint8_t MMU::ReadByte(uint16_t addr) const {
@@ -27,9 +26,8 @@ uint8_t MMU::ReadByte(uint16_t addr) const {
   if (addr >= 0xA000 && addr < 0xC000) {
     if (cartridge_->ram_enabled) {
       return cartridge_->ReadByteFromRAM(addr - 0xA000 + 0x2000 * cartridge_->GetCurrentRAMBank()); // each RAM size is 0x2000 = 8KiB
-    } else {
-      return 0xFF;
     }
+    return 0xFF;
   }
 
   return memory_map_[addr];
