@@ -20,9 +20,9 @@ void Emulator::LoadCartridge(const std::string& file_path, bool only_header) {
   mmu_->LoadCartridge(file_path, only_header);
 }
 
-void Emulator::Run() {
+void Emulator::Run(bool debug) {
   for (;;) {
-    cpu_->Tick();
+    cpu_->Tick(debug);
     timer_->Tick();
     serial_->CheckSerialPort();
   }

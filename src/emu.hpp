@@ -13,7 +13,7 @@ class Emulator {
  public:
   Emulator();
   void LoadCartridge(const std::string& file_path, bool only_header);
-  void Run();
+  void Run(bool debug);
 
  private:
   std::shared_ptr<MMU> mmu_;

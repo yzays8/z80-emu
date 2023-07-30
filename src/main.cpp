@@ -36,5 +36,5 @@ int main(int argc, char** argv) {
     return 0;
   }
   emu->LoadCartridge(argv[optind], false);
-  emu->Run();
+  emu->Run(debug_mode);
 }

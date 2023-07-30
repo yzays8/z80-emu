@@ -51,7 +51,7 @@ const std::array<int, 0x100> tcycles_table_cb_prefixed_ = {
 class CPU {
  public:
   CPU(std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt);
-  void Tick();
+  void Tick(bool debug);
 
   int tcycles;  // CPU clock cycle count, which is reset every CPU run-loop
 

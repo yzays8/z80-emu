@@ -14,11 +14,12 @@ CPU::CPU(std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
       halt_{false} {
 }
 
-void CPU::Tick() {
+void CPU::Tick(bool debug) {
   tcycles = 0;
   if (!halt_) {
     uint8_t opcode = mmu_->ReadByte(registers_->pc);
     ++registers_->pc;
+    if (debug) DebugInstruction(opcode);
     InterpretInstruction(opcode);
     tcycles += (tcycles_table_[opcode] + instructions_->GetBranchCycle());
     if (opcode == 0xCB) {
@@ -54,8 +55,6 @@ void CPU::DebugInstruction(uint8_t opcode) {
 }
 
 void CPU::InterpretInstruction(uint8_t opcode) {
-  // DebugInstruction(opcode);
-
   switch (opcode) {
     case 0x00:  // NOP
       break;
