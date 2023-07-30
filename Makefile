@@ -12,3 +12,11 @@ clean:
 .PHONY: run
 run:
 	make run FILE=$(FILE_PATH) -C $(SRCDIR)
+
+.PHONY: debug
+debug:
+	make debug FILE=$(FILE_PATH) -C $(SRCDIR)
+
+.PHONY: header
+header:
+	make header FILE=$(FILE_PATH) -C $(SRCDIR)

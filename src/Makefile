@@ -15,6 +15,14 @@ clean:
 run:
 	./$(TARGET) $(FILE)
 
+.PHONY: debug
+debug:
+	./$(TARGET) -d $(FILE)
+
+.PHONY: header
+header:
+	./$(TARGET) -h $(FILE)
+
 $(TARGET): $(OBJS) Makefile
 	$(CC) $(OBJS) -o $@
 
