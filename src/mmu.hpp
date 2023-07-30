@@ -8,14 +8,16 @@
 
 class MMU {
  public:
-  MMU(const std::string& path);
-  void LoadROMBank0();
+  MMU();
+  void LoadCartridge(const std::string& path, bool only_header);
   uint8_t ReadByte(uint16_t addr) const;
   uint16_t ReadShort(uint16_t addr) const;        // read 16bits
   void WriteByte(uint16_t addr, uint8_t data);
   void WriteShort(uint16_t addr, uint16_t data);  // write 16bits
 
  private:
+  void LoadROMBank0();
+
   union {
     uint8_t memory_map_[0x10000];
 
@@ -49,5 +51,5 @@ class MMU {
     } __attribute__((packed));
   };
 
-  std::shared_ptr<Cartridge> cartridge_;
+  std::unique_ptr<Cartridge> cartridge_;
 };

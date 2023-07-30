@@ -11,7 +11,8 @@
 
 class Emulator {
  public:
-  Emulator(const std::string& file_path);
+  Emulator();
+  void LoadCartridge(const std::string& file_path, bool only_header);
   void Run();
 
  private:

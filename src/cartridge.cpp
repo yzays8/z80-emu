@@ -8,14 +8,23 @@
 
 #include "cartridge.hpp"
 
-Cartridge::Cartridge(const std::string& path)
+Cartridge::Cartridge()
     : rom_{},
       ram_{},
       header_{},
-      banking_mode_{ROM_MODE} {
+      cartridge_type_{NO_MBC},
+      current_rom_bank_{0},
+      current_ram_bank_{0},
+      banking_mode_{ROM_MODE} {}
+
+void Cartridge::Load(const std::string& path, bool only_header) {
   LoadROM(path);
-  // VerifyHeaderChecksum();
   PrintHeader();
+  if (only_header) {
+    VerifyHeaderChecksum();
+    return;
+  }
+
   switch (header_->cartridge_type) {
     case 0x0:
       cartridge_type_ = NO_MBC;

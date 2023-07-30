@@ -6,13 +6,18 @@
 #include "mmu.hpp"
 #include "cartridge.hpp"
 
-MMU::MMU(const std::string& path)
-    : memory_map_{},
-      cartridge_{std::make_unique<Cartridge>(path)} {}
+MMU::MMU() : memory_map_{}, cartridge_{std::make_unique<Cartridge>()} {}
 
 void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {
     cartridge_rom_bank_0_[i] = cartridge_->ReadByteFromROM(i);
+  }
+}
+
+void MMU::LoadCartridge(const std::string& path, bool only_header) {
+  cartridge_->Load(path, only_header);
+  if (!only_header) {
+    LoadROMBank0();
   }
 }
 

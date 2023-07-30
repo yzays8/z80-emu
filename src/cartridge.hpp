@@ -42,9 +42,9 @@ struct CartridgeHeader {
 
 class Cartridge {
  public:
-  Cartridge(const std::string& path);
+  Cartridge();
+  void Load(const std::string& path, bool only_header);
 
-  void LoadROM(const std::string& path);
   uint8_t ReadByteFromROM(uint16_t addr) const;
   uint8_t ReadByteFromRAM(uint16_t addr) const;
   void WriteByteToRAM(uint16_t addr, uint8_t data);
@@ -68,6 +68,8 @@ class Cartridge {
   bool ram_enabled{false};
 
  private:
+  void LoadROM(const std::string& path);
+
   std::vector<uint8_t> rom_;
   std::array<uint8_t, 0x8000> ram_;
   std::unique_ptr<CartridgeHeader> header_;

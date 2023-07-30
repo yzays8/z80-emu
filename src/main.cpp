@@ -9,6 +9,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  auto emu = std::make_unique<Emulator>(argv[1]);
+  auto emu = std::make_unique<Emulator>();
+  emu->LoadCartridge(argv[1], false);
+  return 0;
   emu->Run();
 }

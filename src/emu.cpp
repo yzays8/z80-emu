@@ -9,16 +9,18 @@
 #include "cpu.hpp"
 #include "timer.hpp"
 
-Emulator::Emulator(const std::string& file_path)
-    : mmu_{std::make_shared<MMU>(file_path)},
+Emulator::Emulator()
+    : mmu_{std::make_shared<MMU>()},
       serial_{std::make_shared<Serial>(mmu_)},
       interrupt_{std::make_shared<Interrupt>(mmu_)},
       cpu_{std::make_shared<CPU>(mmu_, interrupt_)},
       timer_{std::make_shared<Timer>(cpu_, mmu_, interrupt_)} {}
 
-void Emulator::Run() {
-  mmu_->LoadROMBank0();
+void Emulator::LoadCartridge(const std::string& file_path, bool only_header) {
+  mmu_->LoadCartridge(file_path, only_header);
+}
 
+void Emulator::Run() {
   for (;;) {
     cpu_->Tick();
     timer_->Tick();
