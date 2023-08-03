@@ -43,13 +43,14 @@ void Cartridge::Load(const std::string& path, bool only_header) {
 }
 
 void Cartridge::LoadROM(const std::string& path) {
+  namespace fs = std::filesystem;
   if (!std::filesystem::is_regular_file(path)) {
-    std::cerr << path << " is not a regular file" << std::endl;
+    std::cerr << fs::weakly_canonical(fs::absolute(path)) << " is not a regular file" << std::endl;
     std::exit(EXIT_FAILURE);
   }
-  std::ifstream ifs(path, std::ios::binary | std::ios::in);
+  std::ifstream ifs{path, std::ios::binary | std::ios::in};
   if (!ifs.is_open()) {
-    std::cerr << "Failed to open file: " << path << std::endl;
+    std::cerr << "Failed to open file: " << fs::weakly_canonical(fs::absolute(path)) << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
