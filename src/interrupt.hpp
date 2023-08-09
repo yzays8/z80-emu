@@ -15,7 +15,7 @@ enum InterruptType {
   NO_INTERRUPT
 };
 
-const std::array<uint16_t, 5> kInterruptHandler = {0x0040, 0x0048, 0x0050, 0x0058, 0x0060};
+extern const std::array<uint16_t, 5> kInterruptHandler;
 
 class Interrupt {
  public:
