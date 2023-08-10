@@ -24,7 +24,7 @@ void Timer::IncrementDIV(int total_cycles) {
   div_counter_ += total_cycles;
   while (div_counter_ >= 256) {
     // DIV is incremented every 256 clock cycles (16384 Hz)
-    mmu_->WriteByte(0xFF04, mmu_->ReadByte(0xFF04) + 1);
+    mmu_->WriteDIV(mmu_->ReadByte(0xFF04) + 1);
     div_counter_ -= 256;
   }
   // TODO: when stop instruction is executed, DIV will be reset

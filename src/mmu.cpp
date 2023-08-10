@@ -87,3 +87,7 @@ void MMU::WriteShort(uint16_t addr, uint16_t data) {
   WriteByte(addr, data & 0xFF);
   WriteByte(addr + 1, (data >> 8) & 0xFF);
 }
+
+void MMU::WriteDIV(uint8_t data) {
+  memory_map_[0xFF04] = data;
+}
