@@ -6,7 +6,9 @@
 #include "mmu.hpp"
 #include "cartridge.hpp"
 
-MMU::MMU() : memory_map_{}, cartridge_{std::make_unique<Cartridge>()} {}
+MMU::MMU() : memory_map_{}, cartridge_{std::make_unique<Cartridge>()} {
+  std::memset(memory_map_, 0, sizeof(memory_map_));
+}
 
 void MMU::LoadROMBank0() {
   for (int i = 0; i < 0x4000; ++i) {
