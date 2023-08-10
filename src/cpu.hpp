@@ -9,15 +9,16 @@
 #include "instructions.hpp"
 #include "interrupt.hpp"
 
+constexpr int kCPUFreq = 4194304; // 4.194304 MHz
+
 extern const std::array<int, 0x100> tcycles_table_;
 extern const std::array<int, 0x100> tcycles_table_cb_prefixed_;
 
 class CPU {
  public:
-  CPU(std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt);
-  void Tick(bool debug);
-
-  int tcycles;  // CPU clock cycle count, which is reset every CPU run-loop
+  CPU(std::shared_ptr<Registers> registers, std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt);
+  int Tick(bool debug);
+  bool& GetHalt() { return halt_; }
 
  private:
   void InterpretInstruction(uint8_t opcode);

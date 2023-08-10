@@ -3,11 +3,14 @@
 #include <memory>
 #include <string>
 
+#include "registers.hpp"
 #include "mmu.hpp"
 #include "serial.hpp"
 #include "interrupt.hpp"
 #include "cpu.hpp"
 #include "timer.hpp"
+
+constexpr int kFrameRate = 60;    // 60 Hz
 
 class Emulator {
  public:
@@ -16,6 +19,9 @@ class Emulator {
   void Run(bool debug);
 
  private:
+  void UpdateFrame(bool debug);
+
+  std::shared_ptr<Registers> registers_;
   std::shared_ptr<MMU> mmu_;
   std::shared_ptr<Serial> serial_;
   std::shared_ptr<Interrupt> interrupt_;

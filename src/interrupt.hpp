@@ -4,6 +4,7 @@
 #include <array>
 #include <memory>
 
+#include "registers.hpp"
 #include "mmu.hpp"
 
 enum InterruptType {
@@ -19,7 +20,7 @@ extern const std::array<uint16_t, 5> kInterruptHandler;
 
 class Interrupt {
  public:
-  Interrupt(std::shared_ptr<MMU> mmu);
+  Interrupt(std::shared_ptr<Registers> registers, std::shared_ptr<MMU> mmu);
 
   void SetIME(bool ime);
   void SetIE(InterruptType type);
@@ -29,9 +30,11 @@ class Interrupt {
   uint8_t GetIE();
   uint8_t GetIF();
 
+  int ProcessInterrupt(bool& halt);
   int CheckInterrupt();
 
  private:
   bool ime_;
+  std::shared_ptr<Registers> registers_;
   std::shared_ptr<MMU> mmu_;
 };

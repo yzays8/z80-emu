@@ -2,11 +2,15 @@
 #include <memory>
 
 #include "interrupt.hpp"
+#include "registers.hpp"
 #include "mmu.hpp"
 
 const std::array<uint16_t, 5> kInterruptHandler = {0x0040, 0x0048, 0x0050, 0x0058, 0x0060};
 
-Interrupt::Interrupt(std::shared_ptr<MMU> mmu) : ime_{0}, mmu_{mmu} {
+Interrupt::Interrupt(std::shared_ptr<Registers> registers, std::shared_ptr<MMU> mmu)
+    : ime_{0},
+      registers_{registers},
+      mmu_{mmu} {
   mmu_->WriteByte(0xFF0F, 0xE1);
 }
 
@@ -51,4 +55,26 @@ int Interrupt::CheckInterrupt() {
     ie_register >>= 1;
   }
   return i;
+}
+
+int Interrupt::ProcessInterrupt(bool& halt) {
+  int interrupt_type = CheckInterrupt();
+  int cycles = 0;
+
+  if (interrupt_type != NO_INTERRUPT) {
+    // HALT waits for IF and IE to be non-zero
+    halt = false;
+  }
+
+  if (GetIME()) {
+    if (interrupt_type != NO_INTERRUPT) {
+      SetIME(false);
+      ResetIF(interrupt_type);
+      registers_->sp -= 2;  // extend stack
+      mmu_->WriteShort(registers_->sp, registers_->pc); // push pc to stack
+      registers_->pc = kInterruptHandler[interrupt_type];
+      cycles += 20;
+    }
+  }
+  return cycles;
 }

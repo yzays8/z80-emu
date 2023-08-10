@@ -1,13 +1,11 @@
 #include <memory>
 
 #include "timer.hpp"
-#include "cpu.hpp"
 #include "mmu.hpp"
 #include "interrupt.hpp"
 
-Timer::Timer(std::shared_ptr<CPU> cpu, std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
-    : cpu_{cpu},
-      mmu_{mmu},
+Timer::Timer(std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
+    : mmu_{mmu},
       interrupt_{interrupt},
       div_counter_{0},
       tima_counter_{0} {
@@ -17,10 +15,9 @@ Timer::Timer(std::shared_ptr<CPU> cpu, std::shared_ptr<MMU> mmu, std::shared_ptr
   mmu_->WriteByte(0xFF07, 0xF8); // TAC
 }
 
-void Timer::Tick() {
-  int total_cycles = cpu_->tcycles;
-  IncrementDIV(total_cycles);
-  TickTIMA(total_cycles);
+void Timer::Tick(int cycles) {
+  IncrementDIV(cycles);
+  TickTIMA(cycles);
 }
 
 void Timer::IncrementDIV(int total_cycles) {

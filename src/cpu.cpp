@@ -46,46 +46,31 @@ const std::array<int, 0x100> tcycles_table_cb_prefixed_ = {
   8, 8, 8, 8, 8, 8, 16, 8, 8, 8, 8, 8, 8, 8, 16, 8  // 0xF0 - 0xFF
 };
 
-CPU::CPU(std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
-    : registers_{std::make_shared<Registers>()},
+CPU::CPU(std::shared_ptr<Registers> registers, std::shared_ptr<MMU> mmu, std::shared_ptr<Interrupt> interrupt)
+    : registers_{registers},
       mmu_{mmu},
       interrupt_{interrupt},
       instructions_{std::make_shared<Instructions>(registers_, mmu_)},
       halt_{false} {
 }
 
-void CPU::Tick(bool debug) {
-  tcycles = 0;
+int CPU::Tick(bool debug) {
+  int cycles = 0;
+
   if (!halt_) {
     uint8_t opcode = mmu_->ReadByte(registers_->pc);
     ++registers_->pc;
     if (debug) DebugInstruction(opcode);
     InterpretInstruction(opcode);
-    tcycles += (tcycles_table_[opcode] + instructions_->GetBranchCycle());
+    cycles += (tcycles_table_[opcode] + instructions_->GetBranchCycle());
     if (opcode == 0xCB) {
-      tcycles += tcycles_table_cb_prefixed_[opcode];
+      cycles += tcycles_table_cb_prefixed_[opcode];
     }
   } else {
-    tcycles += 4;
+    cycles += 4;
   }
 
-  int interrupt_type = interrupt_->CheckInterrupt();
-
-  if (interrupt_type != NO_INTERRUPT) {
-    // HALT waits for IF and IE to be non-zero and IME is not relevant
-    halt_ = false;
-  }
-
-  if (interrupt_->GetIME()) {
-    if (interrupt_type != NO_INTERRUPT) {
-      interrupt_->SetIME(false);
-      interrupt_->ResetIF(interrupt_type);
-      registers_->sp -= 2;  // extend stack
-      mmu_->WriteShort(registers_->sp, registers_->pc); // push pc to stack
-      registers_->pc = kInterruptHandler[interrupt_type];
-      tcycles += 20;
-    }
-  }
+  return cycles;
 }
 
 void CPU::DebugInstruction(uint8_t opcode) {
