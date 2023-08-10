@@ -90,8 +90,8 @@ void CPU::Tick(bool debug) {
 
 void CPU::DebugInstruction(uint8_t opcode) {
   printf("PC: 0x%04X, Opcode: 0x%02X, AF: 0x%04X, BC: 0x%04X, DE: 0x%04X, HL: 0x%04X, SP: 0x%04X\n",
-    registers_->pc-1, opcode, registers_->af.Get(), registers_->bc.Get(), registers_->de.Get(),
-    registers_->hl.Get(), registers_->sp);
+    registers_->pc-1, opcode, registers_->af, registers_->bc, registers_->de,
+    registers_->hl, registers_->sp);
 }
 
 void CPU::InterpretInstruction(uint8_t opcode) {
@@ -181,7 +181,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
     case 0x17:  // RLA
       {
         bool msb = (registers_->a & 0x80) >> 7;
-        registers_->a = (registers_->a << 1) | registers_->GetCarryFlag();
+        registers_->a = (registers_->a << 1) | registers_->GetFlag(FLAG_C);
         registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         registers_->SetHalfCarryFlag(false);
@@ -212,7 +212,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
     case 0x1F:  // RRA
       {
         bool lsb = registers_->a & 0x1;
-        registers_->a = (registers_->a >> 1) | (registers_->GetCarryFlag() << 7);
+        registers_->a = (registers_->a >> 1) | (registers_->GetFlag(FLAG_C) << 7);
         registers_->SetZeroFlag(true);
         registers_->SetSubtractionFlag(false);
         registers_->SetHalfCarryFlag(false);
@@ -220,14 +220,14 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       }
       break;
     case 0x20:  // JR NZ, r8
-      instructions_->Jr(!registers_->GetZeroFlag());
+      instructions_->Jr(!registers_->GetFlag(FLAG_Z));
       break;
     case 0x21:  // LD HL, d16
       instructions_->Load(registers_->hl);
       break;
     case 0x22:  // LD (HL+), A
       instructions_->Load(registers_->hl, registers_->a);
-      registers_->hl.Set(registers_->hl.Get() + 1);
+      ++registers_->hl;
       break;
     case 0x23:  // INC HL
       instructions_->Inc(registers_->hl);
@@ -242,19 +242,19 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Load(registers_->h);
       break;
     case 0x27:  // DAA, convert the value of register A to the right BCD form based on the type of previous calculation
-      if (!registers_->GetSubtractionFrag()) { //  if register A value is the result of addition
-        if (registers_->GetCarryFlag() || (registers_->a > 0x99)) {
+      if (!registers_->GetFlag(FLAG_N)) { //  if register A value is the result of addition
+        if (registers_->GetFlag(FLAG_C) || (registers_->a > 0x99)) {
           registers_->a += 0x60;
           registers_->SetCarryFlag(true);
         }
-        if (registers_->GetHalfCarryFlag() || ((registers_->a & 0xF) > 0x9)) {
+        if (registers_->GetFlag(FLAG_H) || ((registers_->a & 0xF) > 0x9)) {
           registers_->a += 0x6;
         }
       } else {  // if register A value is the result of subtraction
-        if (registers_->GetCarryFlag()) {
+        if (registers_->GetFlag(FLAG_C)) {
           registers_->a -= 0x60;
         }
-        if (registers_->GetHalfCarryFlag()) {
+        if (registers_->GetFlag(FLAG_H)) {
           registers_->a -= 0x6;
         }
       }
@@ -262,14 +262,14 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       registers_->SetHalfCarryFlag(false);
       break;
     case 0x28:  // JR Z, r8
-      instructions_->Jr(registers_->GetZeroFlag());
+      instructions_->Jr(registers_->GetFlag(FLAG_Z));
       break;
     case 0x29:  // ADD HL, HL
       instructions_->Add(registers_->hl, registers_->hl);
       break;
     case 0x2A:  // LD, A, (HL+)
       instructions_->Load(registers_->a, registers_->hl);
-      registers_->hl.Set(registers_->hl.Get() + 1);
+      ++registers_->hl;
       break;
     case 0x2B:  // DEC HL
       instructions_->Dec(registers_->hl);
@@ -289,7 +289,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       registers_->SetHalfCarryFlag(true);
       break;
     case 0x30:  // JR NC, r8
-      instructions_->Jr(!registers_->GetCarryFlag());
+      instructions_->Jr(!registers_->GetFlag(FLAG_C));
       break;
     case 0x31:  // LD SP, d16
       registers_->sp = mmu_->ReadShort(registers_->pc);
@@ -297,7 +297,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       break;
     case 0x32:  // LD (HL-), A
       instructions_->Load(registers_->hl, registers_->a);
-      registers_->hl.Set(registers_->hl.Get() - 1);
+      --registers_->hl;
       break;
     case 0x33:  // INC SP
       ++registers_->sp;
@@ -309,7 +309,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Dec();
       break;
     case 0x36:  // LD (HL), d8
-      mmu_->WriteByte(registers_->hl.Get(), mmu_->ReadByte(registers_->pc));
+      mmu_->WriteByte(registers_->hl, mmu_->ReadByte(registers_->pc));
       ++registers_->pc;
       break;
     case 0x37:  // SCF
@@ -318,20 +318,21 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       registers_->SetCarryFlag(true);
       break;
     case 0x38:  // JR C, r8
-      instructions_->Jr(registers_->GetCarryFlag());
+      instructions_->Jr(registers_->GetFlag(FLAG_C));
       break;
     case 0x39:  // ADD HL, SP
-      {
-        registers_->SetHalfCarryFlag(((registers_->hl.Get() & 0xFFF) + (registers_->sp & 0xFFF)) > 0xFFF);
-        registers_->SetSubtractionFlag(false);
-        uint32_t res = registers_->hl.Get() + registers_->sp;
-        registers_->SetCarryFlag(res > 0xFFFF);
-        registers_->hl.Set(static_cast<uint16_t>(res));
-      }
+      // {
+      //   registers_->SetHalfCarryFlag(((registers_->hl & 0xFFF) + (registers_->sp & 0xFFF)) > 0xFFF);
+      //   registers_->SetSubtractionFlag(false);
+      //   uint32_t res = registers_->hl + registers_->sp;
+      //   registers_->SetCarryFlag(res > 0xFFFF);
+      //   registers_->hl = static_cast<uint16_t>(res);
+      // }
+      instructions_->Add(registers_->hl, registers_->sp);
       break;
     case 0x3A:  // LD A, (HL-)
       instructions_->Load(registers_->a, registers_->hl);
-      registers_->hl.Set(registers_->hl.Get() - 1);
+      --registers_->hl;
       break;
     case 0x3B:  // DEC SP
       --registers_->sp;
@@ -348,7 +349,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
     case 0x3F:  // CCF
       registers_->SetSubtractionFlag(false);
       registers_->SetHalfCarryFlag(false);
-      registers_->SetCarryFlag(!registers_->GetCarryFlag());
+      registers_->SetCarryFlag(!registers_->GetFlag(FLAG_C));
       break;
     case 0x40:  // LD B, B
       instructions_->Load(registers_->b, registers_->b);
@@ -561,7 +562,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Add(registers_->a, registers_->l);
       break;
     case 0x86:  // ADD A, (HL)
-      instructions_->Add(registers_->a, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Add(registers_->a, mmu_->ReadByte(registers_->hl));
       break;
     case 0x87:  // ADD A, A
       instructions_->Add(registers_->a, registers_->a);
@@ -585,7 +586,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Adc(registers_->a, registers_->l);
       break;
     case 0x8E:  // ADC A, (HL)
-      instructions_->Adc(registers_->a, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Adc(registers_->a, mmu_->ReadByte(registers_->hl));
       break;
     case 0x8F:  // ADC A, A
       instructions_->Adc(registers_->a, registers_->a);
@@ -609,7 +610,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Sub(registers_->l);
       break;
     case 0x96:  // SUB A, (HL)
-      instructions_->Sub(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Sub(mmu_->ReadByte(registers_->hl));
       break;
     case 0x97:  // SUB A, A
       instructions_->Sub(registers_->a);
@@ -633,7 +634,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Sbc(registers_->a, registers_->l);
       break;
     case 0x9E:  // SBC A, (HL)
-      instructions_->Sbc(registers_->a, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Sbc(registers_->a, mmu_->ReadByte(registers_->hl));
       break;
     case 0x9F:  // SBC A, A
       instructions_->Sbc(registers_->a, registers_->a);
@@ -657,7 +658,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->And(registers_->l);
       break;
     case 0xA6:  // AND (HL)
-      instructions_->And(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->And(mmu_->ReadByte(registers_->hl));
       break;
     case 0xA7:  // AND A
       instructions_->And(registers_->a);
@@ -681,7 +682,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Xor(registers_->l);
       break;
     case 0xAE:  // XOR (HL)
-      instructions_->Xor(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Xor(mmu_->ReadByte(registers_->hl));
       break;
     case 0xAF:  // XOR A
       instructions_->Xor(registers_->a);
@@ -705,7 +706,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Or(registers_->l);
       break;
     case 0xB6:  // OR (HL)
-      instructions_->Or(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Or(mmu_->ReadByte(registers_->hl));
       break;
     case 0xB7:  // OR A
       instructions_->Or(registers_->a);
@@ -729,25 +730,25 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Cp(registers_->l);
       break;
     case 0xBE:  // CP (HL)
-      instructions_->Cp(mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Cp(mmu_->ReadByte(registers_->hl));
       break;
     case 0xBF:  // CP A
       instructions_->Cp(registers_->a);
       break;
     case 0xC0:  // RET NZ
-      instructions_->Ret(!registers_->GetZeroFlag());
+      instructions_->Ret(!registers_->GetFlag(FLAG_Z));
       break;
     case 0xC1:  // POP BC
       instructions_->Pop(registers_->bc);
       break;
     case 0xC2:  // JP NZ, a16
-      instructions_->Jp(!registers_->GetZeroFlag());
+      instructions_->Jp(!registers_->GetFlag(FLAG_Z));
       break;
     case 0xC3:  // JP a16
       instructions_->Jp(true);
       break;
     case 0xC4:  // CALL NZ, a16
-      instructions_->Call(!registers_->GetZeroFlag());
+      instructions_->Call(!registers_->GetFlag(FLAG_Z));
       break;
     case 0xC5:  // PUSH BC
       instructions_->Push(registers_->bc);
@@ -759,19 +760,19 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Rst(0x00);
       break;
     case 0xC8:  // RET Z
-      instructions_->Ret(registers_->GetZeroFlag());
+      instructions_->Ret(registers_->GetFlag(FLAG_Z));
       break;
     case 0xC9:  // RET
       instructions_->Ret(true);
       break;
     case 0xCA:  // JP Z, a16
-      instructions_->Jp(registers_->GetZeroFlag());
+      instructions_->Jp(registers_->GetFlag(FLAG_Z));
       break;
     case 0xCB:  // PREFIX CB
       InterpretInstructionCB(mmu_->ReadByte(registers_->pc++));
       break;
     case 0xCC:  // CALL Z, a16
-      instructions_->Call(registers_->GetZeroFlag());
+      instructions_->Call(registers_->GetFlag(FLAG_Z));
       break;
     case 0xCD:  // CALL a16
       instructions_->Call(true);
@@ -783,16 +784,16 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Rst(0x08);
       break;
     case 0xD0:  // RET NC
-      instructions_->Ret(!registers_->GetCarryFlag());
+      instructions_->Ret(!registers_->GetFlag(FLAG_C));
       break;
     case 0xD1:  // POP DE
       instructions_->Pop(registers_->de);
       break;
     case 0xD2:  // JP NC, a16
-      instructions_->Jp(!registers_->GetCarryFlag());
+      instructions_->Jp(!registers_->GetFlag(FLAG_C));
       break;
     case 0xD4:  // CALL NC, a16
-      instructions_->Call(!registers_->GetCarryFlag());
+      instructions_->Call(!registers_->GetFlag(FLAG_C));
       break;
     case 0xD5:  // PUSH DE
       instructions_->Push(registers_->de);
@@ -804,17 +805,17 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       instructions_->Rst(0x10);
       break;
     case 0xD8:  // RET C
-      instructions_->Ret(registers_->GetCarryFlag());
+      instructions_->Ret(registers_->GetFlag(FLAG_C));
       break;
     case 0xD9:  // RETI
       instructions_->Ret(true);
       interrupt_->SetIME(true);
       break;
     case 0xDA:  // JP C, a16
-      instructions_->Jp(registers_->GetCarryFlag());
+      instructions_->Jp(registers_->GetFlag(FLAG_C));
       break;
     case 0xDC:  // CALL C, a16
-      instructions_->Call(registers_->GetCarryFlag());
+      instructions_->Call(registers_->GetFlag(FLAG_C));
       break;
     case 0xDE:  // SBC A, d8
       instructions_->Sbc(registers_->a, mmu_->ReadByte(registers_->pc));
@@ -854,7 +855,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       }
       break;
     case 0xE9:  // JP HL, some document say JP (HL) but it is a mistake
-      registers_->pc = registers_->hl.Get();
+      registers_->pc = registers_->hl;
       break;
     case 0xEA:  // LD (a16), A
       mmu_->WriteByte(mmu_->ReadShort(registers_->pc), registers_->a);
@@ -876,7 +877,7 @@ void CPU::InterpretInstruction(uint8_t opcode) {
       ++registers_->pc;
       break;
     case 0xF1:  // POP AF
-      registers_->af.Set(mmu_->ReadShort(registers_->sp) & 0xFFF0);
+      registers_->af = mmu_->ReadShort(registers_->sp) & 0xFFF0;
       registers_->sp += 2;
       break;
     case 0xF2:  // LD A, (C)
@@ -902,11 +903,11 @@ void CPU::InterpretInstruction(uint8_t opcode) {
         ++registers_->pc;
         registers_->SetHalfCarryFlag((registers_->sp & 0xF) + (r8 & 0xF) > 0xF);
         registers_->SetCarryFlag((registers_->sp & 0xFF) + (r8 & 0xFF) > 0xFF);
-        registers_->hl.Set(registers_->sp + r8);
+        registers_->hl = registers_->sp + r8;
       }
       break;
     case 0xF9:  // LD SP, HL
-      registers_->sp = registers_->hl.Get();
+      registers_->sp = registers_->hl;
       break;
     case 0xFA:  // LD A, (a16)
       registers_->a = mmu_->ReadByte(mmu_->ReadShort(registers_->pc));
@@ -1142,7 +1143,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(0, registers_->l);
       break;
     case 0x46:  // BIT 0, (HL)
-      instructions_->Bit(0, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(0, mmu_->ReadByte(registers_->hl));
       break;
     case 0x47:  // BIT 0, A
       instructions_->Bit(0, registers_->a);
@@ -1166,7 +1167,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(1, registers_->l);
       break;
     case 0x4E:  // BIT 1, (HL)
-      instructions_->Bit(1, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(1, mmu_->ReadByte(registers_->hl));
       break;
     case 0x4F:  // BIT 1, A
       instructions_->Bit(1, registers_->a);
@@ -1190,7 +1191,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(2, registers_->l);
       break;
     case 0x56:  // BIT 2, (HL)
-      instructions_->Bit(2, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(2, mmu_->ReadByte(registers_->hl));
       break;
     case 0x57:  // BIT 2, A
       instructions_->Bit(2, registers_->a);
@@ -1214,7 +1215,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(3, registers_->l);
       break;
     case 0x5E:  // BIT 3, (HL)
-      instructions_->Bit(3, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(3, mmu_->ReadByte(registers_->hl));
       break;
     case 0x5F:  // BIT 3, A
       instructions_->Bit(3, registers_->a);
@@ -1238,7 +1239,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(4, registers_->l);
       break;
     case 0x66:  // BIT 4, (HL)
-      instructions_->Bit(4, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(4, mmu_->ReadByte(registers_->hl));
       break;
     case 0x67:  // BIT 4, A
       instructions_->Bit(4, registers_->a);
@@ -1262,7 +1263,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(5, registers_->l);
       break;
     case 0x6E:  // BIT 5, (HL)
-      instructions_->Bit(5, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(5, mmu_->ReadByte(registers_->hl));
       break;
     case 0x6F:  // BIT 5, A
       instructions_->Bit(5, registers_->a);
@@ -1286,7 +1287,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(6, registers_->l);
       break;
     case 0x76:  // BIT 6, (HL)
-      instructions_->Bit(6, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(6, mmu_->ReadByte(registers_->hl));
       break;
     case 0x77:  // BIT 6, A
       instructions_->Bit(6, registers_->a);
@@ -1310,7 +1311,7 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       instructions_->Bit(7, registers_->l);
       break;
     case 0x7E:  // BIT 7, (HL)
-      instructions_->Bit(7, mmu_->ReadByte(registers_->hl.Get()));
+      instructions_->Bit(7, mmu_->ReadByte(registers_->hl));
       break;
     case 0x7F:  // BIT 7, A
       instructions_->Bit(7, registers_->a);
@@ -1359,8 +1360,8 @@ void CPU::InterpretInstructionCB(uint8_t opcode) {
       break;
     case 0x8E:  // RES 1, (HL)
       {
-        uint8_t op2 = mmu_->ReadByte(registers_->hl.Get());
-        mmu_->WriteByte(registers_->hl.Get(), op2 & ((1 << 1) ^ 0xFF));
+        uint8_t op2 = mmu_->ReadByte(registers_->hl);
+        mmu_->WriteByte(registers_->hl, op2 & ((1 << 1) ^ 0xFF));
       }
       break;
     case 0x8F:  // RES 1, A

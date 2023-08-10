@@ -12,29 +12,29 @@ class Instructions {
   // returns the number of additional cycles in an instruction with a branch
   int GetBranchCycle();
 
-  void Load(RegisterU16& op1);
+  void Load(uint16_t& op1);
   void Load(uint8_t& op1);
   void Load(uint8_t& op1, uint8_t op2);
-  void Load(uint8_t& op1, RegisterU16& op2);
-  void Load(RegisterU16& op1, uint8_t op2);
+  void Load(uint8_t& op1, uint16_t op2);
+  void Load(uint16_t op1, uint8_t op2);
 
   void Ret(bool flag);
-  void Pop(RegisterU16& op1);
-  void Push(RegisterU16& op1);
+  void Pop(uint16_t& op1);
+  void Push(uint16_t& op1);
   void Jp(bool flag);
   void Jr(bool flag);
   void Call(bool flag);
   void Rst(uint16_t addr);
 
-  void Add(RegisterU16& op1, RegisterU16& op2);
+  void Add(uint16_t& op1, uint16_t op2);
   void Add(uint8_t& op1, uint8_t op2);
   void Adc(uint8_t& op1, uint8_t op2);
   void Sub(uint8_t op1);
   void Sbc(uint8_t& op1, uint8_t op2);
-  void Inc(RegisterU16& op1);
+  void Inc(uint16_t& op1);
   void Inc(uint8_t& op1);
   void Inc();
-  void Dec(RegisterU16& op1);
+  void Dec(uint16_t& op1);
   void Dec(uint8_t& op1);
   void Dec();
 
