@@ -76,6 +76,8 @@ void MMU::WriteByte(uint16_t addr, uint8_t data) {
     if (cartridge_->ram_enabled) {
       cartridge_->WriteByteToRAM(addr - 0xA000 + 0x2000 * cartridge_->GetCurrentRAMBank(), data);
     }
+  } else if (addr == 0xFF04) {
+    memory_map_[addr] = 0;
   } else {
     memory_map_[addr] = data;
   }
