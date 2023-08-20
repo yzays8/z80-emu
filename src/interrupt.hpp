@@ -30,7 +30,7 @@ class Interrupt {
   uint8_t GetIE();
   uint8_t GetIF();
 
-  int ProcessInterrupt(bool& halt);
+  void ProcessInterrupt(bool& halt);
   int CheckInterrupt();
 
  private:

@@ -43,8 +43,6 @@ void Emulator::UpdateFrame(bool debug) {
     cycles += cpu_cycles;
     timer_->Tick(cpu_cycles);
     serial_->CheckSerialPort(cpu_cycles);
-    cycles += interrupt_->ProcessInterrupt(cpu_->GetHalt());
+    interrupt_->ProcessInterrupt(cpu_->GetHalt());
   }
-
-  // Render
 }
